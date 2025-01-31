@@ -2,12 +2,15 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-async function processLogs(logsDir, date) {
+async function processLogs(logsDir, date, topCount = 10) {
   const outputFilePath = path.join(__dirname, `../output/output_${date}.txt`);
   const writeStream = fs.createWriteStream(outputFilePath);
   let count = 0;
 
   console.log(`🔍 Searching logs for date: ${date}...`);
+
+  // Add the new line to the start of the output file
+  writeStream.write('--- Start of log extraction ---\n\n');
 
   // Read all files in logs directory
   const files = fs.readdirSync(logsDir);
@@ -21,17 +24,23 @@ async function processLogs(logsDir, date) {
     });
 
     rl.on('line', (line) => {
-      if (line.includes(date)) {
+      if (line.includes(date) && count < topCount) {
         writeStream.write(line + '\n');
         count++;
       }
     });
 
+    // Wait for the file to be fully processed
     await new Promise((resolve) => rl.on('close', resolve));
+
+    // Stop if we have written the required number of top logs
+    if (count >= topCount) {
+      break;
+    }
   }
 
   writeStream.end();
-  console.log(`✅ Extraction complete. ${count} log entries saved to ${outputFilePath}`);
+  console.log(`✅ Extraction complete. ${count} top log entries saved to ${outputFilePath}`);
 }
 
 // Get the date from command-line args
@@ -47,4 +56,5 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
   process.exit(1);
 }
 
-processLogs(path.join(__dirname, '../logs'), date);
+// Adjust the number of top logs you want to extract, here set to 10
+processLogs(path.join(__dirname, '../logs'), date, 10);
