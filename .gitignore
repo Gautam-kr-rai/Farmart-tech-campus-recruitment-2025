@@ -1,0 +1,11 @@
+# Ignore log files
+logs/
+*.log
+*.zip
+
+# Ignore output files
+output/
+output_*.txt
+
+# Ignore node modules (already should be ignored)
+node_modules/
